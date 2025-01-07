@@ -1,0 +1,13 @@
+const Bib = {
+    saveResults: function (data) {
+        const results = JSON.parse(localStorage.getItem('allResults')  '[]');
+        results.push(data);
+        localStorage.setItem('allResults', JSON.stringify(results));
+    },
+
+    getResults: function () {
+        return JSON.parse(localStorage.getItem('allResults')  '[]');
+    }
+};
+
+export default Bib;
