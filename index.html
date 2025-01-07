@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Опросник</title>
+    <style>
+        body {
+            font-family:"Montserrat";
+            color:#00008B;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #E6E6FA;
+        }
+
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 80%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #00008B;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            text-align: left;
+            font-family:"Montserrat";
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="number"] {
+            width: calc(100% - 12px);
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .btn {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        .result-message {
+            margin-top: 20px;
+            font-weight: bold;
+            font-family:"RAYDIS";
+            color: green;
+        }
+
+        #resultsTable {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        #resultsTable th, #resultsTable td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+
+        #resultsTable th {
+            background-color: #007bff;
+            color: white;
+        }
+    </style>
+    <script type="module">
+        import Bib from './bib.js';
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const authForm = document.getElementById('authForm');
+            const lastNameInput = document.getElementById('lastName');
+            const courseInput = document.getElementById('course');
+            const errorMessage = document.getElementById('error-message');
+            const authPage = document.getElementById('authPage');
+            const surveyPage = document.getElementById('surveyPage');
+            const testPage = document.getElementById('testPage');
+            const teacherPage = document.getElementById('teacherPage');
+
+            authForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const lastName = lastNameInput.value.trim();
+                const course = courseInput.value.trim();
+
+                if (lastName === "Бозиев" && course === "преподаватель") {
+                    authPage.style.display = 'none';
+                    teacherPage.style.display = 'block';
+                    loadTeacherData();
+                    return;
+                }
+              const allowedStudents = [
+                    { lastName: "Токмакова", course: "3" },
+                    { lastName: "Кочесокова", course: "3" },
+                    { lastName: "Белимготова", course: "3" },
+                    { lastName: "Калмыкова", course: "3" },
+                    { lastName: "Хабалов", course: "3" },
+                    { lastName: "Шуева", course: "3" },
+                    { lastName: "Хавпачев", course: "3" },
+                    { lastName: "Ципинов", course: "3" },
+                    { lastName: "Тишков", course: "3" },
+                    { lastName: "Биттиров", course: "3" },
+                    { lastName: "Жанимов", course: "3" },
+                    { lastName: "Келеметов", course: "3" },
+                    { lastName: "Шогенов", course: "3" },
+                    { lastName: "Шарипова", course: "3" },
+                    { lastName: "Дауров", course: "3" }
+                ];
+
+                const isAllowed = allowedStudents.some(student => student.lastName === lastName && student.course === course);
+
+                if (isAllowed) {
+                    localStorage.setItem('currentStudent', JSON.stringify({ lastName, course }));
+                    authPage.style.display = 'none';
+                    surveyPage.style.display = 'block';
+                } else {
+                    errorMessage.textContent = "Ошибка авторизации. Пожалуйста, проверьте фамилию и курс.";
+                }
+            });
+
+            const surveyForm = document.getElementById('surveyForm');
+            surveyForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const answers = {
+                    q1: surveyForm.q1.value,
+                    q2: surveyForm.q2.value,
+                    q3: surveyForm.q3.value,
+                    q4: surveyForm.q4.value,
+                    q5: surveyForm.q5.value,
+                    q6: surveyForm.q6.value,
+                    q7: surveyForm.q7.value,
+                    q8: surveyForm.q8.value,
+                    q9: surveyForm.q9.value,
+                    q10: surveyForm.q10.value
+                };
+                localStorage.setItem('surveyAnswers', JSON.stringify(answers));
+                surveyPage.style.display = 'none';
+                testPage.style.display = 'block';
+            });
+
+            const testForm = document.getElementById('testForm');
+            const resultDiv = document.getElementById('result');
+            testForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const studentData = JSON.parse(localStorage.getItem('currentStudent'));
+                const surveyAnswers = JSON.parse(localStorage.getItem('surveyAnswers'));
+                const answers = {
+                    q1: testForm.q1.value,
+                    q2: testForm.q2.value,
+                    q3: testForm.q3.value,
+                    q4: testForm.q4.value,
+                    q5: Array.from(testForm.q5)
+                        .filter(checkbox => checkbox.checked)
+                        .map(checkbox => checkbox.value),
+                    q6: testForm.q6.value,
+                    q7: testForm.q7.value
+                };
+
+                const correctAnswers = {
+                    q1: 'b',
+                    q2: 'b',
+                    q3: 'c',
+                    q4: 'c',
+                    q5: ['b', 'c', 'd', 'f', 'h'],
+                    q6: 'b',
+                    q7: 'b'
+                };
+                let correctCount = 0;
+
+                Object.keys(correctAnswers).forEach(key => {
+                    if (Array.isArray(correctAnswers[key])) {
+                        const isCorrect = correctAnswers[key].every(answer => answers[key].includes(answer)) && answers[key].length === correctAnswers[key].length;
+                        if (isCorrect) correctCount++;
+                    } else {
+                        if (answers[key] === correctAnswers[key]) correctCount++;
+                    }
+                });
+              const percentage = (correctCount / Object.keys(correctAnswers).length) * 100;
+                resultDiv.textContent = Ваш результат: ${percentage.toFixed(2)}%;
+
+                let results = {
+                    ...studentData,
+                    ...surveyAnswers,
+                    testPercentage: percentage.toFixed(2)
+                };
+
+                Bib.saveResults(results);
+            });
+
+            function loadTeacherData() {
+                const resultsTableBody = document.getElementById('resultsBody');
+                const results = Bib.getResults();
+
+                results.forEach(result => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${result.lastName}</td>
+                        <td>${result.course}</td>
+                        <td>${result.q1}</td>
+                        <td>${result.q2}</td>
+                        <td>${result.q3}</td>
+                        <td>${result.q4}</td>
+                        <td>${result.q5}</td>
+                        <td>${result.q6}</td>
+                        <td>${result.q7}</td>
+                        <td>${result.q8}</td>
+                        <td>${result.q9}</td>
+                        <td>${result.q10}</td>
+                        <td>${result.testPercentage}%</td>
+                    `;
+                    resultsTableBody.appendChild(row);
+                });
+            }
+        });
+    </script>
+</head>
+<body>
+</html>
